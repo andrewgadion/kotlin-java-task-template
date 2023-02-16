@@ -1,3 +1,5 @@
+package task
+
 class KotlinLinkedList<T> {
 	class Node<T>(val value: T, var next: Node<T>? = null)
 
