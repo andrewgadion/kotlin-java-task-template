@@ -1,62 +1,87 @@
 package task
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.*
+import java.util.stream.Stream
 
-private data class InsertTestData<T>(
-    val initialItems: List<T>,
-    val insertParams: Pair<Int, T>,
-    val expectedItems: List<T>
-)
 
-typealias ListToVerify<T> = JavaLinkedList<T>
+typealias ActualList<T> = JavaLinkedList<T>
 
 class LinkedListTest {
 
-    private fun <T> create(vararg elements: T) = ListToVerify<T>().also { elements.forEach(it::append) }
+    private fun <T> create(elements: List<T>) = ActualList<T>().also { elements.forEach(it::append) }
 
-    private fun <T> assertContentEqual(expected: List<T>, actual: ListToVerify<T>) {
+    private fun <T> assertContentEquals(actual: ActualList<T>, expected: List<T>) {
+        try {
+            (0 until actual.count()).forEach {
+                assertEquals(expected[it], actual.get(it))
+            }
+        } catch (error: AssertionError) {
+            printItems(actual, expected)
+            throw error
+        }
+    }
+
+    private fun <T> printItems(actual: ActualList<T>, expected: List<T>) {
+        var actualItemsString = ""
+
         (0 until actual.count()).forEach {
-            assertEquals(expected[it], actual.get(it))
+            actualItemsString += "${actual.get(it)}, "
         }
+
+        println("Actual:   [${actualItemsString.removeSuffix(", ")}]\nExpected: [${expected.joinToString()}]")
+    }
+
+    companion object {
+        @JvmStatic
+        fun giveDataForCountTest() = Stream.of(listOf(), listOf(1), listOf(1, 2, 3))
+
+        @JvmStatic
+        fun giveDataForInsertTest() = Stream.of(
+            Arguments.of(emptyList<String>(), "a" to 0, listOf("a")),
+            Arguments.of(listOf("a"), "b" to 0, listOf("b", "a")),
+            Arguments.of(listOf("a"), "b" to 1, listOf("a", "b")),
+            Arguments.of(listOf("a", "b", "c"), "d" to 2, listOf("aa", "b", "d", "c")),
+            Arguments.of(listOf("a", "b", "c"), "d" to 3, listOf("a", "b", "c", "d")),
+            Arguments.of(listOf("a", "b", "c"), "d" to 1, listOf("a", "d", "b", "c"))
+        )
+
+        @JvmStatic
+        fun giveDataForReverseTest() = Stream.of(listOf(), listOf(1), listOf(1, 2), listOf(1, 2, 3), listOf(1, 2, 3, 4))
+    }
+
+    @ParameterizedTest
+    @MethodSource("giveDataForCountTest")
+    fun count(initList: List<Int>) {
+        assertEquals(initList.size, create(initList).count())
+    }
+
+    @ParameterizedTest
+    @MethodSource("giveDataForInsertTest")
+    fun insert(initItems: List<String>, insertParams: Pair<String, Int>, expectedItems: List<String>) {
+        val actualList = create(initItems)
+        val (item, index) = insertParams
+        actualList.insert(index, item)
+        assertContentEquals(actualList, expectedItems)
     }
 
     @Test
-    fun count() {
-        assertEquals(0, create<Int>().count())
-        assertEquals(1, create(1).count())
-        assertEquals(3, create(1, 1, 1).count())
-    }
-
-    @Test
-    fun insert() {
-        listOf(
-            InsertTestData(emptyList(), 0 to 1, listOf(1)),
-            InsertTestData(listOf(1), 0 to 2, listOf(2, 1)),
-            InsertTestData(listOf(1), 1 to 2, listOf(1, 2)),
-            InsertTestData(listOf(1, 2, 3), 2 to 4, listOf(1, 2, 4, 3)),
-            InsertTestData(listOf(1, 2, 3), 3 to 4, listOf(1, 2, 3, 4)),
-            InsertTestData(listOf(1, 2, 3), 1 to 4, listOf(1, 4, 2, 3)),
-        ).forEach { (initialItems, insertParams, expectedItems) ->
-            val actualList = create(*initialItems.toTypedArray())
-            val (index, item) = insertParams
-            actualList.insert(index, item)
-            assertContentEqual(expectedItems, actualList)
+    fun insertError() {
+        assertThrows(Throwable::class.java) {
+            val initList = listOf(1, 2, 3)
+            val actualList = create(initList)
+            actualList.insert(initList.size, 4)
         }
     }
 
-//    @Test
-//    fun reverse() {
-//        listOf(
-//            listOf(),
-//            listOf(1),
-//            listOf(1, 2),
-//            listOf(1, 2, 3),
-//            listOf(1, 2, 3, 4),
-//        ).forEach { input ->
-//            val actualList = create(*input.toTypedArray())
-//            actualList.reverse()
-//            assertContentEqual(input.reversed(), actualList)
-//        }
+//    @ParameterizedTest
+//    @MethodSource("giveDataForReverseTest")
+//    fun reverse(initList: List<Int>) {
+//        assertContentEquals(create(initList).also(ActualList<Int>::reverse), initList.reversed())
 //    }
 }
