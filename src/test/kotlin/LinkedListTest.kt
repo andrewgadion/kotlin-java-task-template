@@ -46,7 +46,7 @@ class LinkedListTest {
             Arguments.of(emptyList<String>(), "a" to 0, listOf("a")),
             Arguments.of(listOf("a"), "b" to 0, listOf("b", "a")),
             Arguments.of(listOf("a"), "b" to 1, listOf("a", "b")),
-            Arguments.of(listOf("a", "b", "c"), "d" to 2, listOf("aa", "b", "d", "c")),
+            Arguments.of(listOf("a", "b", "c"), "d" to 2, listOf("a", "b", "d", "c")),
             Arguments.of(listOf("a", "b", "c"), "d" to 3, listOf("a", "b", "c", "d")),
             Arguments.of(listOf("a", "b", "c"), "d" to 1, listOf("a", "d", "b", "c"))
         )
