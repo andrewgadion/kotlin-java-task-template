@@ -75,7 +75,7 @@ class LinkedListTest {
         assertThrows(Throwable::class.java) {
             val initList = listOf(1, 2, 3)
             val actualList = create(initList)
-            actualList.insert(initList.size, 4)
+            actualList.insert(initList.size + 1, 4)
         }
     }
 
